@@ -1,0 +1,329 @@
+Statement = DirectiveStatement
+          | ReservationStatement
+          | DefinitionItem
+          | RegistrationItem
+          | NotationItem
+          | TheoremStatement
+          | SchemeStatement
+          | ReasoningItem .
+
+# directive
+DirectiveStatement = DirectiveKeyword ArticleName { "," ArticleName } ";" .
+DirectiveKeyword = "vocabularies"
+                 | "notations"
+                 | "constructors"
+                 | "registrations"
+                 | "definitions"
+                 | "expansions"
+                 | "equalities"
+                 | "theorems"
+                 | "schemes"
+                 | "requirements" .
+ArticleName = FileNameIdentifier .
+
+# reservation
+ReservationStatement = "reserve" ReservationSegment { "," ReservationSegment } ";" .
+ReservationSegment = ReservedIdentifiers "for" TypeExpression .
+ReservedIdentifiers = ReservedIdentifier { "," ReservedIdentifier } .
+
+# definition
+DefinitionItem = StructureDefinition
+               | ModeDeclare
+               | CorrectnessItem
+               | ModeProperty
+               | FunctorDeclare
+               | FunctorProperty
+               | PredicateDeclare
+               | PredicateProperty
+               | AttributeDeclare
+               | ModeRedefinition
+               | FunctorRedefinition
+               | PredicateRedefinition
+               | AttributeRedefinition .
+
+ModeRedefinition      = "redefine" ModeDefinition .
+FunctorRedefinition   = "redefine" FunctorDefinition .
+PredicateRedefinition = "redefine" PredicateDefinition .
+AttributeRedefinition = "redefine" AttributeDefinition .
+
+# registration
+RegistrationItem = ExistentialRegistration
+                 | ConditionalRegistration
+                 | FunctorialRegistration
+                 | IdentifyRegistration
+                 | PropertyRegistration
+                 | ReductionRegistration .
+
+# notation
+NotationItem = AttributeSynonym
+             | AttributeAntonym
+             | FunctorSynonym
+             | ModeSynonym
+             | PredicateSynonym
+             | PredicateAntonym .
+
+# struct
+StructureDefinition = "struct" [ "(" Ancestors ")" ] StructureSymbol [ "over" Variables ] "(#" Fields "#)" ";" .
+Ancestors = StructureTypeExpression { "," StructureTypeExpression } .
+# StructureSymbol = Symbol .
+Fields = FieldSegment { "," FieldSegment } .
+FieldSegment = SelectorSymbol { "," SelectorSymbol } Specification .
+# SelectorSymbol = Symbol .
+Specification = "->" Type-Expression .
+
+# mode
+ModeDeclare = "mode" ModePattern ( [ Specification ] [ "means" Definiens ]
+                                 | "is" TypeExpression ) ";" .
+ModePattern = ModeSymbol [ "of" Loci ] .
+# ModeSymbol = Symbol | "set" .
+Definiens = SimpleDefiniens
+          | ConditionalDefiniens .
+SimpleDefiniens = [ ":" LabelIdentifier ":" ] ( Sentence | TermExpression ) .
+# LabelIdentifier = Identifier .
+ConditionalDefiniens = [ ":" LabelIdentifier ":" ] PartialDefiniensList [ "otherwise" ( Sentence | TermExpression ) ] .
+PartialDefiniensList = PartialDefiniens { "," PartialDefiniens } .
+PartialDefiniens = ( Sentence | TermExpression ) "if" Sentence .
+
+CorrectnessItem = ( "existence"
+                  | "uniqueness"
+                  | "coherence"
+                  | "compatibility"
+                  | "consistency"
+                  | "reducibility"
+                  | "correctness" ) SimpleJustification [ ";" ] .
+
+ModeProperty = "sethood" Justification ";" .
+
+ModeSynonym = "synonym" ModePattern "for" ModePattern ";" .
+
+# functor
+
+FunctorDeclare = "func" FunctorPattern [ Specification ] [ ( "means" | "equals" ) Definiens ] ";" .
+FunctorPattern = [ Functor-Loci ] FunctorSymbol [ Functor-Loci ]
+               | LeftFunctorBracket Loci RightFunctorBracket .
+FunctorLoci = Locus | "(" Loci ")" .
+# FunctorSymbol = Symbol .
+# LeftFunctorBracket = Symbol .
+# RightFunctorBracket = Symbol .
+
+FunctorProperty = ( "commutativity"
+                  | "idempotence"
+                  | "involutiveness"
+                  | "projectivity" ) SimpleJustification [ ";" ] .
+
+FunctorSynonym = "synonym" FunctorPattern "for" FunctorPattern ";" .
+
+# predicate
+PredicateDeclare = "pred" PredicatePattern [ "means" Definiens ] ";" .
+PredicatePattern = [ Loci ] PredicateSymbol [ Loci ] .
+# PredicateSymbol = Symbol | "=" .
+
+PredicateProperty = ( "symmetry"
+                    | "asymmetry"
+                    | "connectedness"
+                    | "reflexivity"
+                    | "irreflexivity" ) SimpleJustification [ ";" ] .
+
+PredicateSynonym = "synonym" PredicatePattern "for" PredicatePattern ";" .
+PredicateAntonym = "antonym" PredicatePattern "for" PredicatePattern ";" .
+
+# attribute
+AttributeDefinition = "attr" AttributePattern "means" Definiens ";" .
+AttributePattern = Locus "is" [ AttributeLoci ] AttributeSymbol .
+# AttributeSymbol = Symbol .
+AttributeLoci = Loci | "(" Loci ")" .
+
+AttributeSynonym = "synonym" AttributePattern "for" AttributePattern ";" .
+AttributeAntonym = "antonym" AttributePattern "for" AttributePattern ";" .
+
+# cluster
+ExistentialRegistration = "cluster" AdjectiveCluster "for" TypeExpression ";" .
+AdjectiveCluster = { Adjective } .
+Adjective = [ "non" ] [ AdjectiveArguments ] AttributeSymbol .
+
+ConditionalRegistration = "cluster" AdjectiveCluster "->" AdjectiveCluster "for" TypeExpression ";" .
+FunctorialRegistration = "cluster" TermExpression "->" AdjectiveCluster [ "for" TypeExpression ] ";" .
+IdentifyRegistration = "identify" FunctorPattern "with" FunctorPattern [ "when" Locus "=" Locus { "," Locus "=" Locus } ] ";" .
+PropertyRegistration = "sethood" "of" TypeExpression [ ";" ] .
+ReductionRegistration = "reduce" TermExpression "to" TermExpression ";" .
+
+# theorem
+TheoremStatement = "theorem" CompactStatement .
+CompactStatement = Proposition SimpleJustification [ ";" ] .
+
+# scheme
+SchemeStatement = "scheme" SchemeIdentifier "{" SchemeParameters "}" ":" SchemeConclusion [ "provided" SchemePremise { "and" SchemePremise } ]  [ ";" ] .
+# SchemeIdentifier = Identifier .
+SchemeParameters = SchemeSegment { "," SchemeSegment } .
+SchemeConclusion = FormulaExpression .
+SchemePremise = Proposition .
+SchemeSegment = PredicateSegment
+              | FunctorSegment .
+PredicateSegment = PredicateIdentifier { "," PredicateIdentifier } "[" [ TypeExpressionList ] "]" .
+# PredicateIdentifier = Identifier .
+FunctorSegment = FunctorIdentifier { "," FunctorIdentifier } "(" [ TypeExpressionList ] ")" Specification .
+# FunctorIdentifier = Identifier .
+
+# reasoning item
+ReasoningItem = ConstantDefinition
+              | PrivateFunctorDefinition
+              | PrivatePredicateDefinition
+              | PerCasesItem
+              | CaseItem
+              | SingleAssumption
+              | CollectiveAssumption
+              | ExistentialAssumption
+              | Generalization
+              | Conclusion
+              | Exemplification
+              | CompactStatement
+              | ChoiceStatement
+              | TypeChangingStatement
+              | IterativeEquality .
+
+ConstantDefinition = "set" EquatingList ";" .
+EquatingList = Equating { "," Equating } .
+Equating = VariableIdentifier "=" TermExpression .
+
+PrivateFunctorDefinition = "deffunc" PrivateFunctorPattern "=" TermExpression ";" .
+PrivateFunctorPattern = FunctorIdentifier "(" [ TypeExpressionList ] ")" .
+
+PrivatePredicateDefinition = "defpred" PrivatePredicatePattern "means" FormulaExpression ";" .
+PrivatePredicatePattern = PredicateIdentifier "[" [ TypeExpressionList ] "]" .
+
+# per cases / case / suppose
+PerCasesItem = [ "then" ] "per" "cases" SimpleJustification ";" .
+CaseItem = ( "case" | "suppose" ) ( Proposition | Conditions ) ";" .
+
+# assume
+SingleAssumption = "assume" Proposition ";" .
+CollectiveAssumption = "assume" Conditions ";" .
+ExistentialAssumption = "given" QualifiedVariables [ "such" Conditions ] ";" .
+
+# let
+Generalization = "let" QualifiedVariables [ "such" Conditions ] ";" .
+
+# thus / hence
+Conclusion = ( "thus" | "hence" ) ( CompactStatement | IterativeEquality ) .
+
+# take
+Exemplification = "take" Example { "," Example } ";" .
+Example = TermExpression
+        | VariableIdentifier "=" TermExpression .
+
+CompactStatement = [ "then" ] Proposition SimpleJustification ";" .
+
+ChoiceStatement = [ "then" ] "consider" QualifiedVariables "such" Conditions SimpleJustification ";" .
+
+TypeChangingStatement = [ "then" ] "reconsider" TypeChangeList "as" TypeExpression SimpleJustification ";" .
+TypeChangeList = ( Equating | VariableIdentifier ) { "," ( Equating | VariableIdentifier ) } .
+
+IterativeEquality = [ "then" ] [ LabelIdentifier ":" ]
+                        TermExpression "=" TermExpression SimpleJustification
+                                      ".=" TermExpression SimpleJustification
+                                    { ".=" TermExpression SimpleJustification } ";" .
+
+
+# justification
+
+SimpleJustification = StraightforwardJustification
+                    | SchemeJustification .
+StraightforwardJustification = [ "by" References ] .
+SchemeJustification = "from" SchemeReference [ "(" References ")" ] .
+References = Reference { "," Reference } .
+Reference = LocalReference | LibraryReference .
+LocalReference = LabelIdentifier .
+LocalSchemeReference = SchemeIdentifier .
+LibraryReference = ArticleName ":" ( TheoremNumber | "def" DefinitionNumber ) { "," ( TheoremNumber | "def" DefinitionNumber ) } .
+LibrarySchemeReference = ArticleName ":" "sch" SchemeNumber .
+TheoremNumber = Numeral .
+DefinitionNumber = Numeral .
+SchemeNumber = Numeral .
+
+
+# others
+Conditions = "that" Proposition { "and" Proposition } .
+Proposition = [ Label-Identifier ":" ] FormulaExpression .
+
+
+# Expressions
+
+## formula expression
+FormulaExpression = "(" FormulaExpression ")"
+                  | AtomicFormulaExpression
+                  | QuantifiedFormulaExpression
+                  | FormulaExpression "&" FormulaExpression
+                  | FormulaExpression "&" "..." "&" FormulaExpression
+                  | FormulaExpression "or" FormulaExpression
+                  | FormulaExpression "or" "..." "or" FormulaExpression
+                  | FormulaExpression "implies" FormulaExpression
+                  | FormulaExpression "iff" FormulaExpression
+                  | "not" FormulaExpression
+                  | "contradiction"
+                  | "thesis" .
+
+AtomicFormulaExpression = [ TermExpressionList ] [ ( "does" | "do" ) "not" ] PredicateSymbol [ TermExpressionList ] { [ ( "does" | "do" ) "not" ] PredicateSymbol TermExpressionList }
+                        | PredicateIdentifier "[" [ TermExpressionList ] "]"
+                        | TermExpression "is" Adjective { Adjective }
+                        | TermExpression "is" TypeExpression .
+
+QuantifiedFormulaExpression = "for" QualifiedVariables [ "st" FormulaExpression ] ( "holds" FormulaExpression | QuantifiedFormulaExpression )
+                            | "ex" QualifiedVariables "st" FormulaExpression .
+
+
+## qualified variables
+QualifiedVariables = ImplicitlyQualifiedVariables
+                   | ExplicitlyQualifiedVariables
+                   | ExplicitlyQualifiedVariables "," ImplicitlyQualifiedVariables .
+ImplicitlyQualifiedVariables = Variables .
+ExplicitlyQualifiedVariables = QualifiedSegment { "," QualifiedSegment } .
+QualifiedSegment = Variables Qualification .
+Variables = VariableIdentifier { "," VariableIdentifier } .
+Qualification = ( "being" | "be" ) TypeExpression .
+
+## type expression
+TypeExpression = "(" RadixType ")"
+               | AdjectiveCluster TypeExpression
+               | RadixType .
+
+## (structure type expression)
+StructureTypeExpression = "(" StructureSymbol [ "over" TermExpressionList ] ")"
+                        | AdjectiveCluster StructureSymbol [ "over" TermExpressionList ] .
+
+RadixType = ModeSymbol [ "of" TermExpressionList ]
+          | Structure-Symbol [ "over" TermExpressionList ] .
+
+## (type expression list)
+TypeExpressionList = TypeExpression { "," TypeExpression } .
+
+# term expression
+TermExpression = "(" TermExpression ")"
+               | [ Arguments ] FunctorSymbol [ Arguments ]
+               | LeftFunctorBracket TermExpressionList RightFunctorBracket
+               | FunctorIdentifier "(" [ TermExpressionList ] ")"
+               | StructureSymbol "(#" TermExpressionList "#)"
+               | "the" StructureSymbol "of" TermExpression
+               | VariableIdentifier
+               | "{" TermExpression { Postqualification } ":" Sentence "}"
+               | "the" "set" "of" "all" TermExpression { Postqualification }
+               | Numeral
+               | TermExpression "qua" TypeExpression
+               | "the" SelectorSymbol "of" TermExpression
+               | "the" SelectorSymbol
+               | "the" TypeExpression
+               | PrivateDefinitionParameter
+               | "it" .
+
+Arguments = TermExpression
+          | "(" TermExpressionList ")" .
+
+AdjectiveArguments = TermExpressionList
+                   | "(" Term-Expression-List ")" .
+
+TermExpressionList = TermExpression { "," TermExpression } .
+
+Postqualification = "where" PostqualifyingSegment { "," PostqualifyingSegment } .
+PostqualifyingSegment = PostqualifiedVariable { "," PostqualifiedVariable } [ ( "is" | "are" ) TypeExpression ] .
+# PostqualifiedVariable = Identifier .
+
+PrivateDefinitionParameter = "$1" | "$2" | "$3" | "$4" | "$5" | "$6" | "$7" | "$8" | "$9" | "$10" .
